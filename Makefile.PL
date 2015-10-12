@@ -6,10 +6,10 @@ use strict;
 use warnings;
 use inc::Module::Install;
 
-name('File-Attributes');
-author('Jonathan Rockway <jrockway@cpan.org>');
-version_from('lib/File/Attributes.pm');
-abstract_from('lib/File/Attributes.pm');
+name('check-passive');
+author('Wang Feng <guidao1013@gmail.com>');
+version_from('lib/Nagios/NSCA.pm');
+abstract_from('lib/Nagios/NSCA.pm');
 license('Perl');
 include('ExtUtils::AutoInstall');
 
