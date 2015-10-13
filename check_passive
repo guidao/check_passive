@@ -87,7 +87,7 @@ Jeremy Brinkley, E<lt>jbrinkley@proofpoint.comE<gt>
 use strict;
 # use warnings;
 use lib '/opt/pptools';
-use ppenv;
+#use ppenv;
 use Optconfig;
 use Data::Dumper;
 use Text::ParseWords;
@@ -104,11 +104,12 @@ $VERSION = '__VERSION__';
 
 $opt = Optconfig->new($me, {
    'check=s%' => undef,
-   'nrpe=s%' => { 'config' => '/etc/nagios/nrpe.cfg' },
+   'nrpe=s%' => { 'config' => '/home/ops/nagios/client/nrpe.cfg' },
    'nsca=s%' => {
       'command' => 'send_nsca',
       'host' => 'nagios',
       'port' => 5667,
+      'hostname' => undef,
       'timeout' => 10,
       'config' => '/etc/send_nsca.cfg' } });
 
@@ -127,13 +128,11 @@ my $nrpe = Nagios::NRPE::Config->new($opt->{'nrpe'});
 my $nsca = Nagios::NSCA->new($opt->{'nsca'});
 
 my $result = { };
-
 for my $service (@ARGV) {
    if (! exists($opt->{'check'}->{$service})) {
       wrn("Undefined service: $service");
       next;
    }
-
    vrb("Preparing to check $service");
    
    my $check = $opt->{'check'}->{$service};
@@ -148,7 +147,6 @@ for my $service (@ARGV) {
       dbg("check command $check treated as raw command");
       @cmd = shellwords($check);
    }
-
    unless (-x $cmd[0]) {
       wrn("Service check command executable $cmd[0] "
           . "does not exist or is not executable");
@@ -157,8 +155,8 @@ for my $service (@ARGV) {
                                   'result' => 3 };
       next;
    }
-
    eval {
+      $result->{$service}->{'host'} = $opt->{'nsca'}->{'hostname'};
       $result->{$service} = run_check_cmd(@cmd);
    };
    if ($@) {
@@ -167,7 +165,6 @@ for my $service (@ARGV) {
 }
 
 dbg("Results: " . ddump($result));
-
 if (keys %$result) {
    my $nsca = Nagios::NSCA->new($opt->{'nsca'});
    for my $service (keys %$result) {
